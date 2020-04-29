@@ -22,7 +22,7 @@ function init(){
     }
 html += `
     </header>
-        <div id="content" class="mdui-container"> 
+        <div id="content" class="mdui-container">
         </div>`;
     $('body').html(html);
 }
@@ -64,17 +64,7 @@ function nav(path) {
 			html += `<i class="mdui-icon material-icons mdui-icon-dark folder" style="margin:0;">chevron_right</i><a class="folder" href="${p}">${n}</a>`;
 		}
 	}
-	html += `<div class="mdui-toolbar-spacer"></div>
-    <a href="https://github.com/kulokenci/goindex-drive" target="_blank" class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" mdui-tooltip="{content: 'GoIndex Drive on Github'}">
-      <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 36 36" enable-background="new 0 0 36 36" xml:space="preserve" class="mdui-icon" style="width: 24px;height:24px;">
-        <path fill-rule="evenodd" clip-rule="evenodd" fill="#ffffff" d="M18,1.4C9,1.4,1.7,8.7,1.7,17.7c0,7.2,4.7,13.3,11.1,15.5
-	c0.8,0.1,1.1-0.4,1.1-0.8c0-0.4,0-1.4,0-2.8c-4.5,1-5.5-2.2-5.5-2.2c-0.7-1.9-1.8-2.4-1.8-2.4c-1.5-1,0.1-1,0.1-1
-	c1.6,0.1,2.5,1.7,2.5,1.7c1.5,2.5,3.8,1.8,4.7,1.4c0.1-1.1,0.6-1.8,1-2.2c-3.6-0.4-7.4-1.8-7.4-8.1c0-1.8,0.6-3.2,1.7-4.4
-	c-0.2-0.4-0.7-2.1,0.2-4.3c0,0,1.4-0.4,4.5,1.7c1.3-0.4,2.7-0.5,4.1-0.5c1.4,0,2.8,0.2,4.1,0.5c3.1-2.1,4.5-1.7,4.5-1.7
-	c0.9,2.2,0.3,3.9,0.2,4.3c1,1.1,1.7,2.6,1.7,4.4c0,6.3-3.8,7.6-7.4,8c0.6,0.5,1.1,1.5,1.1,3c0,2.2,0,3.9,0,4.5
-	c0,0.4,0.3,0.9,1.1,0.8c6.5-2.2,11.1-8.3,11.1-15.5C34.3,8.7,27,1.4,18,1.4z"></path>
-      </svg>
-    </a>`;
+	html += `<div class="mdui-toolbar-spacer"></div>`;
 	$('#nav').html(html);
 }
 
@@ -87,32 +77,32 @@ function list(path){
         if(dark){content += `<div class="mdui-textfield"><input class="mdui-textfield-input mdui-text-color-white-text" id="myInput" onkeyup="myFunction()" type="text" placeholder="Search for names.."></input></div>`;
         }else{content += `<div class="mdui-textfield"><input class="mdui-textfield-input" id="myInput" onkeyup="myFunction()" type="text" placeholder="Search for names.."></input></div>`;}
     }
-	content += `<div class="mdui-row"> 
-	  <ul class="mdui-list"> 
-	   <li class="mdui-list-item th"> 
+	content += `<div class="mdui-row">
+	  <ul class="mdui-list">
+	   <li class="mdui-list-item th">
 	    <div class="mdui-col-xs-12 mdui-col-sm-7">
 	    File
 	<i class="mdui-icon material-icons icon-sort" data-sort="name" data-order="more">expand_more</i>
-	    </div> 
+	    </div>
 	    <div class="mdui-col-sm-3 mdui-text-right">
         Change the time
 	<i class="mdui-icon material-icons icon-sort" data-sort="date" data-order="downward">expand_more</i>
-	    </div> 
+	    </div>
 	    <div class="mdui-col-sm-2 mdui-text-right">
 	     Size
 	<i class="mdui-icon material-icons icon-sort" data-sort="size" data-order="downward">expand_more</i>
-	    </div> 
-	    </li> 
-	  </ul> 
-	 </div> 
-	 <div class="mdui-row"> 
-	  <ul id="list" class="mdui-list"> 
-	  </ul> 
+	    </div>
+	    </li>
+	  </ul>
+	 </div>
+	 <div class="mdui-row">
+	  <ul id="list" class="mdui-list">
+	  </ul>
 	 </div>
 	 <div id="readme_md" class="mdui-typo" style="display:none; padding: 20px 0;"></div>
 	`;
 	$('#content').html(content);
-	
+
     var password = localStorage.getItem('password'+path);
     $('#list').html(`<div class="mdui-progress"><div class="mdui-progress-indeterminate"></div></div>`);
     $('#readme_md').hide().html('');
@@ -217,7 +207,7 @@ function file(path){
 	if("|mpg|mpeg|mkv|rm|rmvb|mov|wmv|asf|ts|flv|".indexOf(`|${ext}|`) >= 0){
 		return file_video(path);
 	}
-	
+
 	if("|mp3|wav|ogg|m4a|".indexOf(`|${ext}|`) >= 0){
 		return file_audio(path);
 	}
@@ -239,7 +229,7 @@ function file_code(path){
 		"json":"json",
 		"txt":"Text",
 		"sh":"sh",
-		"md":"Markdown",	
+		"md":"Markdown",
 	};
 	var name = path.split('/').pop();
 	var ext = name.split('.').pop();
@@ -258,7 +248,7 @@ function file_code(path){
 <script src="https://cdn.staticfile.org/ace/1.4.7/ext-language_tools.js"></script>
 	`;
 	$('#content').html(content);
-	
+
 	$.get(path, function(data){
 		$('#editor').html($('<div/>').text(data).html());
 		var code_type = "Text";
@@ -269,7 +259,7 @@ function file_code(path){
 	    editor.setTheme("ace/theme/ambiance");
 	    editor.setFontSize(18);
 	    editor.session.setMode("ace/mode/"+code_type);
-	    
+
 	    //Autocompletion
 	    editor.setOptions({
 	        enableBasicAutocompletion: true,
@@ -449,6 +439,6 @@ $(function(){
         render(url);
         return false;
     });
-    
+
     render(path);
 });
