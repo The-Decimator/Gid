@@ -1,6 +1,6 @@
 var authConfig = {
-  "siteName": "Games - Drive", // Site Name
-  "version" : "2.3", // version
+  "siteName": "GoIndex - Drive", // Site Name
+  "version" : "2.4", // version
   "basic_auth": false, // change to Basic authentication
   "user": "",
   "pass": "",
@@ -23,7 +23,7 @@ var html = `
     <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0, user-scalable=no"/>
     <title>${authConfig.siteName}</title>
     <script>var main_color = "${authConfig.main_color}";var accent_color = "${authConfig.accent_color}";var dark = ${authConfig.dark_theme};var search = ${authConfig.search};</script>
-    <script src="//cdn.jsdelivr.net/combine/gh/jquery/jquery@3.2/dist/jquery.min.js,gh/The-Decimator/Gid@${authConfig.version}/themes/${authConfig.theme}/app.js"></script>
+    <script src="//cdn.jsdelivr.net/combine/gh/jquery/jquery@3.2/dist/jquery.min.js,gh/kulokenci/goindex-drive@${authConfig.version}/themes/${authConfig.theme}/app.js"></script>
 </head>
 <body>
 </body>
@@ -100,7 +100,7 @@ async function apiRequest(request) {
   let path = url.pathname;
   console.log(path);
   let option = {status:200,headers:{'Access-Control-Allow-Origin':'*'}}
-
+  
   if(path.substr(-1) == '/'){
     let list = await gd.list(path);
     return new Response(JSON.stringify(list),option);
@@ -266,7 +266,7 @@ class googleDrive {
 
   async _findDirId(parent, name){
     name = decodeURIComponent(name).replace(/\'/g, "\\'");
-
+    
     console.log("_findDirId",parent,name);
 
     if(parent==undefined){
