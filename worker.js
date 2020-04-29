@@ -1,14 +1,12 @@
 var authConfig = {
   "siteName": "GoIndex - Drive", // Site Name
-  "version" : "2.4", // version
-  "basic_auth": false, // change to Basic authentication
-  "user": "",
-  "pass": "",
+  "root_pass": "",  // Site Password
+  "version" : "2.3", // version
   "theme" : "material", // material  classic
   "main_color": "light-green",
   "accent_color": "green",
   "dark_theme": false, //make sure you set main color
-  "search": false, // dont use, not wokrk :(
+  "search": true,
   "client_id": "202264815644.apps.googleusercontent.com",
   "client_secret": "X4Z3ca8xfWDb1Voo-F9a7ZxJ",
   "refresh_token": "", // Authorization token
@@ -24,6 +22,7 @@ var html = `
     <title>${authConfig.siteName}</title>
     <script>var main_color = "${authConfig.main_color}";var accent_color = "${authConfig.accent_color}";var dark = ${authConfig.dark_theme};var search = ${authConfig.search};</script>
     <script src="//cdn.jsdelivr.net/combine/gh/jquery/jquery@3.2/dist/jquery.min.js,gh/kulokenci/goindex-drive@${authConfig.version}/themes/${authConfig.theme}/app.js"></script>
+    <script type="text/javascript">if(window.location.protocol != "https:") {var currentURL = window.location.href;window.location.replace("https" + currentURL.substring(4));}</script>
 </head>
 <body>
 </body>
@@ -34,35 +33,6 @@ addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request));
 });
 
-function unauthorized() {
-  return new Response('401 NOT AUTHORIZED', {
-    headers: {
-      'WWW-Authenticate': 'Basic realm="Access to GoIndex Drive", charset="UTF-8"',
-      'Access-Control-Allow-Origin': '*'
-    },
-    status: 401
-  });
-}
-
-function parseBasicAuth(auth) {
-  try {
-    return atob(auth.split(' ').pop()).split(':');
-  } catch (e) {
-    return [];
-  }
-}
-
-function doBasicAuth(request) {
-  const auth = request.headers.get('Authorization');
-
-  if (!auth || !/^Basic [A-Za-z0-9._~+/-]+=*$/i.test(auth)) {
-    return false;
-  }
-
-  const [user, pass] = parseBasicAuth(auth);
-  return user === authConfig.user && pass === authConfig.pass;
-}
-
 /**
 * Fetch and log a request
 * @param {Request} request
@@ -72,22 +42,20 @@ async function handleRequest(request) {
     gd = new googleDrive(authConfig);
   }
 
-  if (authConfig.basic_auth && !doBasicAuth(request)) {
-    return unauthorized();
-  }
-
-  let url = new URL(request.url);
-
-  if (request.method == 'POST'){
+  if(request.method == 'POST'){
     return apiRequest(request);
   }
 
+  let url = new URL(request.url);
   let path = url.pathname;
   let action = url.searchParams.get('a');
 
   if(path.substr(-1) == '/' || action != null){
     return new Response(html,{status:200,headers:{'Content-Type':'text/html; charset=utf-8'}});
   }else{
+    if(path.split('/').pop().toLowerCase() == ".password"){
+       return new Response("",{status:404});
+    }
     let file = await gd.file(path);
     let range = request.headers.get('Range');
     return gd.down(file.id, range);
@@ -98,10 +66,25 @@ async function handleRequest(request) {
 async function apiRequest(request) {
   let url = new URL(request.url);
   let path = url.pathname;
-  console.log(path);
+
   let option = {status:200,headers:{'Access-Control-Allow-Origin':'*'}}
-  
+
   if(path.substr(-1) == '/'){
+    // check password
+    let password = await gd.password(path);
+    console.log("dir password", password);
+    if(password != undefined && password != null && password != ""){
+      try{
+        var obj = await request.json();
+      }catch(e){
+        var obj = {};
+      }
+      console.log(password,obj);
+      if(password.replace("\n", "") != obj.password){
+        let html = `{"error": {"code": 401,"message": "password error."}}`;
+        return new Response(html,option);
+      }
+    }
     let list = await gd.list(path);
     return new Response(JSON.stringify(list),option);
   }else{
@@ -111,23 +94,16 @@ async function apiRequest(request) {
   }
 }
 
-async function apiSearchRequest(q) {
-  let option = {status:200,headers:{'Access-Control-Allow-Origin':'*'}}
-  let notfound = []
-  let list = await gd.search(q);
-  if(list.length == 0){
-      return new Response(JSON.stringify(notfound),option);
-  }else{
-      return new Response(JSON.stringify(list),option);
-  }
-}
-
 class googleDrive {
   constructor(authConfig) {
       this.authConfig = authConfig;
       this.paths = [];
       this.files = [];
+      this.passwords = [];
       this.paths["/"] = authConfig.root;
+      if(authConfig.root_pass != ""){
+        this.passwords["/"] = authConfig.root_pass;
+      }
       this.accessToken();
   }
 
@@ -165,32 +141,6 @@ class googleDrive {
     return obj.files[0];
   }
 
-  // cari langsung ke gd berdasarkan root id sekarang
-  async search(query){
-    let url = 'https://www.googleapis.com/drive/v3/files';
-    this.files = [];
-    if(authConfig.root.length>20){
-        return this.files;
-    }
-    let params;
-    if(authConfig.root=="root"){
-        params = {'corpus':'user','includeItemsFromAllDrives':false,'supportsAllDrives':false};
-        params.q = `name contains '${query}' and trashed = false`;
-    }else{
-        params = {'corpora':'drive', 'driveId': authConfig.root, 'includeItemsFromAllDrives':true,'supportsAllDrives':true};
-        params.q = `name contains '${query}' and trashed = false`;
-    }
-    params.fields = "files(id, name, mimeType, size ,createdTime, modifiedTime, iconLink, thumbnailLink)";
-    url += '?'+this.enQuery(params);
-    let requestOption = await this.requestOption();
-    let response = await fetch(url, requestOption);
-    let obj = await response.json();
-    for (let i=0; i<obj.files.length; i+=1) {
-        this.files.push(obj.files[i]);
-    }
-    return this.files;
-  }
-
   // Cache via reqeust cache
   async list(path){
     if (gd.cache == undefined) {
@@ -210,6 +160,26 @@ class googleDrive {
     return obj
   }
 
+  async password(path){
+    if(this.passwords[path] !== undefined){
+      return this.passwords[path];
+    }
+
+    console.log("load",path,".password",this.passwords[path]);
+
+    let file = await gd.file(path+'.password');
+    if(file == undefined){
+      this.passwords[path] = null;
+    }else{
+      let url = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`;
+      let requestOption = await this.requestOption();
+      let response = await this.fetch200(url, requestOption);
+      this.passwords[path] = await response.text();
+    }
+
+    return this.passwords[path];
+  }
+
   async _ls(parent){
     console.log("_ls",parent);
 
@@ -220,7 +190,7 @@ class googleDrive {
     let pageToken;
     let obj;
     let params = {'includeItemsFromAllDrives':true,'supportsAllDrives':true};
-    params.q = `'${parent}' in parents and trashed = false`;
+    params.q = `'${parent}' in parents and trashed = false AND name !='.password'`;
     params.orderBy= 'folder,name,modifiedTime desc';
     params.fields = "nextPageToken, files(id, name, mimeType, size , modifiedTime)";
     params.pageSize = 1000;
